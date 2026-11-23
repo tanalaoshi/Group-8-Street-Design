@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<title>跨時代道路模擬器（探究任務版）</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;--bg:#eef1ee;--fg:#1c2b33;--mut:#5b6b73;--cd:#fff;--ln:#c9d2d5;--ac:#c9382c;--ok:#2f7d5b;--wn:#b98500;--bl:#2a5d84}
+@media(prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#121b1f;--fg:#e8eff1;--mut:#9fb1b8;--cd:#1b2a30;--ln:#34484f;--ac:#ef7366;--ok:#58b88c;--wn:#f0c23c;--bl:#79b2dc}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.6 system-ui,-apple-system,"Noto Sans TC",sans-serif;background-image:repeating-linear-gradient(0deg,transparent 0 31px,rgba(120,140,150,.1) 31px 32px),repeating-linear-gradient(90deg,transparent 0 31px,rgba(120,140,150,.1) 31px 32px)}
+main{max-width:1080px;margin:auto;padding:14px}
+.hdr{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px}
+h1{font-size:1.55rem;font-weight:900;margin:0;border-bottom:5px solid #e0a800;padding-bottom:2px}
+h2{font-size:1.08rem;margin:.2em 0 .5em;display:flex;justify-content:space-between;align-items:center}
+button{font:inherit;cursor:pointer;color:var(--fg);background:var(--cd);border:2px solid var(--ln);border-radius:8px;padding:6px 12px;box-shadow:0 3px 0 var(--ln);transition:transform .08s}
+button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
+button.on{background:var(--fg);color:var(--bg);border-color:var(--fg)}
+button:disabled{opacity:.42;cursor:not-allowed;box-shadow:none}
+.lv-btn{font-weight:700}
+.lv-btn.active{background:var(--bl);color:#fff;border-color:var(--bl)}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:8px 0}
+.cd{background:var(--cd);border:1px solid var(--ln);border-radius:10px;padding:12px}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px;margin-top:12px}
+svg{width:100%;height:auto;display:block;border-radius:8px;border:2px solid var(--fg);background:#bfe3f2;user-select:none;touch-action:none}
+.drag-item{cursor:grab}
+.drag-item:active{cursor:grabbing}
+label{display:grid;grid-template-columns:7.8em 1fr 4.5em;gap:8px;align-items:center;margin:6px 0}
+input[type=range]{width:100%;accent-color:var(--bl)}
+.m{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ln);padding:5px 0}
+.m b{font-size:1.45rem}.up{color:var(--ok)}.dn{color:var(--ac)}
+.badge{font-size:.75rem;font-weight:700;padding:2px 8px;border-radius:99px;background:var(--bg);border:1px solid var(--ln)}
+.badge.ok{background:var(--ok);color:#fff;border-color:var(--ok)}
+.badge.err{background:var(--ac);color:#fff;border-color:var(--ac)}
+.note{border-left:5px solid var(--wn);padding:6px 10px;background:var(--cd);font-size:.9rem;margin:8px 0;border-radius:0 6px 6px 0}
+.note.info{border-left-color:var(--bl)}
+ul.ms{list-style:none;padding:0;margin:4px 0}
+ul.ms li{padding:5px 8px;margin:4px 0;border-radius:6px;background:var(--bg);display:flex;align-items:center;gap:6px;font-size:.92rem}
+ul.ms li.ok{background:rgba(47,125,91,.14);color:var(--ok);font-weight:700}
+.diff{font-size:.72rem;font-weight:700;padding:1px 6px;border-radius:4px;color:#fff;flex-shrink:0}
+.d-easy{background:#2f7d5b}.d-mid{background:#d98200}.d-hard{background:#c9382c}
+.sd{display:flex;gap:10px;margin:8px 0;padding:8px;border:1px solid var(--ln);border-radius:8px}
+.sb{flex:0 0 52px;height:52px;border-radius:6px;color:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.1}
+.sb b{font-size:.95rem}.sb span{font-size:1.25rem}
+.sx{flex:1;min-width:0}.sn{font-weight:700}.sn small{display:block;font-weight:400;color:var(--mut);font-size:.72rem}
+.stars{display:inline-block;font-size:1.3rem;color:#f5b301;letter-spacing:2px}
+.fb{font-size:.84rem;color:var(--mut)}
+.sy{display:flex;gap:8px;margin:8px 0;align-items:flex-start}
+.av{flex:0 0 36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.15rem}
+.bu{background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:6px 10px;flex:1;font-size:.9rem}
+.bu b{display:block;font-size:.78rem;color:var(--mut)}
+.bob{animation:bob .45s ease-in-out infinite alternate}@keyframes bob{to{transform:translateY(-3px)}}
+.en{animation:en linear infinite}.lv{animation:lv linear infinite}
+@keyframes en{0%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(var(--d))}}
+@keyframes lv{0%{opacity:0}8%{opacity:1}100%{opacity:1;transform:translateX(var(--d))}}
+.wk{animation:wk linear infinite alternate}@keyframes wk{to{transform:translateX(var(--d))}}
+#tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+#tools button{text-align:left;padding:10px;display:flex;flex-direction:column;gap:5px;min-height:112px}
+#tools button small{font-size:.78rem;font-weight:400;line-height:1.5}
+.tool-cost{font-weight:800;font-size:.88rem}.budget-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
+.budget-grid>div{padding:12px;background:var(--bg);border:1px solid var(--ln);border-radius:8px;font-size:.9rem}
+.budget-grid strong{display:block;font-size:1.3rem;margin-top:4px}.over-budget{color:var(--ac);border-left-color:var(--ac)}
+@media(max-width:640px){#tools{grid-template-columns:repeat(2,minmax(0,1fr))}.budget-grid{gap:5px}.budget-grid>div{padding:8px}.budget-grid strong{font-size:1rem}.g2{grid-template-columns:minmax(0,1fr)}h2{flex-wrap:wrap;gap:6px}main{padding:10px}}
+@media(max-width:370px){#tools{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <div class="hdr">
+    <h1>跨時代道路模擬器：交通規劃挑戰</h1>
+    <div class="row" style="margin:0">
+      <button class="lv-btn active" id="btnL1" onclick="setLevel(1)">第一關：晴天上學尖峰</button>
+      <button class="lv-btn" id="btnL2" onclick="setLevel(2)">第二關：暴雨＋管線施工（進階）</button>
+    </div>
+  </div>
+
+  <svg id="sc" viewBox="0 0 800 408" role="img" aria-label="校門口街景模擬"></svg>
+
+  <div class="note info" id="hint">
+    💡 <b>操作提示：</b>點擊下方按鈕加入或取消設施。啟用<b>「導護志工」</b>或<b>「限速 30 標誌」</b>後，可直接在上方畫布中<b>左右拖曳</b>它們的位置，測試擺在哪裡最能保護同學！
+  </div>
+
+  <div class="cd" style="margin-top:8px">
+    <h2>
+      <span>道路安全設施（15 項選最多 8 項）</span>
+      <span class="badge" id="facBadge">已用設施：0 / 8 項</span>
+    </h2>
+    <p class="fb">點選設施可加入或取消；斑馬線與號誌為既有設施，不計入名額。費用為本次規劃的教學模擬值，非實際工程報價；取消設施會全額退回。</p>
+    <div class="budget-grid" aria-label="經費儀表板">
+      <div>總預算<strong id="budgetTotal">不限</strong></div>
+      <div>已用經費<strong id="budgetUsed">NT$ 0</strong></div>
+      <div>剩餘經費<strong id="budgetLeft">不限</strong></div>
+    </div>
+    <p id="budgetMessage" class="note info" role="status" aria-live="polite"></p>
+    <div class="row" id="tools"></div>
+    <p id="toolMessage" class="fb" role="status"></p>
+  </div>
+
+  <div class="g2">
+    <div class="cd">
+      <h2>
+        <span>上學方式分配（運具上下限）</span>
+        <span class="badge" id="popBadge">總人數：100 / 100 人</span>
+      </h2>
+      <div id="sd"></div>
+      <div class="note">
+        📌 <b>數學換算規則：</b><br>
+        • 步行 1 人 ＝ <b>1 位學生</b> ｜ 自行車 1 台 ＝ <b>1 位學生</b><br>
+        • 機車 1 台 ＝ <b>1 位學生</b>（家長載 1 人）<br>
+        • 汽車 1 台 ＝ <b>1.5 位學生</b>（部分共乘） ｜ 公車 1 台 ＝ <b>20 位學生</b><br>
+        • 單程距離固定為 <b>1.5 公里</b>，每天計算上、放學共 <b>2 趟</b>。
+      </div>
+      <div class="note">
+        <b>指標代表什麼意思？</b>
+        <ul style="margin:4px 0 0 1.2em;padding:0">
+          <li><b>安全分數</b>：越高，代表行人、單車與汽機車越不容易發生碰撞。</li>
+          <li><b>好走程度</b>：越高，代表走路與騎單車的空間越寬敞、不被車流擠壓。</li>
+          <li><b>通行順暢度</b>：汽車過多會大塞車，但車速太快也會降低安全。</li>
+          <li><b>碳排放量</b>：汽車與機車越少，空氣越乾淨，校門口也越安全。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="cd">
+      <h2>
+        <span>階段任務清單（由簡單到困難）</span>
+        <span class="badge" id="msBadge">完成 0 / 20</span>
+      </h2>
+      <p class="fb">任務依目前配置即時判定，修改後可能取消勾選。各關均需同時達成 20 項；第二關超支時無法完成最終驗收。</p>
+      <ul class="ms" id="ms"></ul>
+      <h2 style="margin-top:14px">即時數據儀表板（與現況比較）</h2>
+      <div id="dash"></div>
+    </div>
+  </div>
+
+  <div class="cd" style="margin-top:12px">
+    <h2>校門口利害關係人回饋（模擬不同角色的真實心聲）</h2>
+    <div id="fbk"></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const cl = x => Math.max(0, Math.min(100, Math.round(x)));
+
+// 排放係數 (kg CO2e / km)
+const F = { m: 0.06, c: 0.20, s: 0.08 };
+
+// 關卡設定 (適性難度與人數規模)
+const LEVELS = {
+  1: {
+    name: "第一關：晴天上學尖峰",
+    targetPop: 100,
+    tol: 5, // 允許誤差 ±5 人 (95~105人)
+    maxTools: 8,
+    budget: null, // 第一關不限制經費
+    rain: false,
+    blocked: [],
+    initS: { w: 20, b: 5, s: 1, m: 23, c: 18, o: 1.5, d: 1.5 },
+    bounds: {
+      w: [10, 45], // 步行至少10人，最多45人
+      b: [0, 20],  // 單車0~20台
+      s: [1, 4],   // 公車至少1班，最多4班
+      m: [5, 30],  // 機車至少5台，最多30台
+      c: [4, 22]   // 汽車至少4台，最多22台
+    }
+  },
+  2: {
+    name: "第二關：暴雨＋管線施工（進階）",
+    targetPop: 120,
+    tol: 5, // 115~125人
+    maxTools: 8,
+    budget: 120000, // 第二關教學模擬預算（元）
+    rain: true,  // 暴雨視線不良，風險係數提升
+    blocked: ["walkS"], // 校門側管線施工，無法改建校門側步道
+    initS: { w: 18, b: 4, s: 1, m: 28, c: 26, o: 1.5, d: 1.5 },
+    bounds: {
+      w: [10, 50],
+      b: [0, 20],
+      s: [1, 5],
+      m: [8, 35],
+      c: [6, 28]
+    }
+  }
+};
+
+const SL_META = [
+  ["w", "步行學生", "人"],
+  ["b", "自行車", "台"],
+  ["s", "接駁公車", "台"],
+  ["m", "家長機車", "台"],
+  ["c", "家長汽車", "台"]
+];
+
+const TOOLS = [
+  ["lim", "限速 30 標誌（可拖曳）", 8000, "降低車速與風險；靠近斑馬線效果較佳，順暢度略降。"],
+  ["walkS", "拆樹改建校門側步道", 60000, "提升安全與好走程度，但會移除 6 棵樹；第二關施工停用。"],
+  ["walk", "對面新增人行步道", 45000, "提供行人空間，提高安全與好走程度。"],
+  ["bike", "綠色自行車專用道", 35000, "提升好走程度；有自行車通行時也降低碰撞風險。"],
+  ["nop", "校門前禁止路邊停車", 6000, "清出視線與行走空間；接送車繞行使順暢度略降。"],
+  ["vol", "導護志工（可拖曳）", 12000, "費用含培訓與裝備；越靠近斑馬線，安全效果越好。"],
+  ["light", "行穿線照明燈", 18000, "改善辨識度並降低風險；暴雨時效果更明顯。"],
+  ["mirror", "路口反射鏡", 5000, "輔助看見轉角來車，小幅降低風險。"],
+  ["bump", "減速平台", 16000, "強化減速、降低風險，但通行順暢度下降。"],
+  ["refuge", "行人庇護島", 32000, "提供穿越道路的中途等候空間；順暢度略降。"],
+  ["barrier", "行人防護欄", 14000, "引導行人走向斑馬線，提高安全與好走程度。"],
+  ["tactile", "無障礙斜坡與導盲設施", 10000, "改善步道銜接，提高行走便利與安全。"],
+  ["canopy", "候車遮雨棚", 28000, "改善候車空間；暴雨時減少匆忙穿越風險。"],
+  ["drain", "路面排水改善", 24000, "改善行走條件；暴雨時減少積水造成的風險。"],
+  ["pickup", "分流接送停靠區", 20000, "分散接送車輛，提高順暢度並降低衝突風險。"]
+];
+const money = n => `NT$ ${n.toLocaleString("zh-TW")}`;
+function getBudget(lv = level, ids = [...on]) {
+  const total = LEVELS[lv].budget;
+  const used = TOOLS.filter(([id]) => ids.includes(id)).reduce((sum, t) => sum + t[2], 0);
+  return { total, used, remaining: total === null ? null : total - used, ok: total === null || used <= total };
+}
+
+let level = 1;
+let S = { ...LEVELS[1].initS };
+let on = new Set();
+let pos = { volX: 302, limX: 289 }; // 可拖曳物件的 X 座標 (斑馬線中心約在 X=250)
+let dragging = null;
+let LAST = "";
+
+// 基準現況計算
+function getBase(lv) {
+  return calc(LEVELS[lv].initS, [], lv, { volX: 302, limX: 289 });
+}
+
+// 計算空間位置效能 (斑馬線位於 X = 210 ~ 290，中心為 250)
+function getPosEfficiency(p) {
+  // 導護志工越靠近斑馬線兩端 (190~310)，防護效果越好 (0.4 ~ 1.0)
+  const distVol = Math.abs(p.volX - 250);
+  const volEff = distVol <= 65 ? 1.0 : Math.max(0.35, 1 - (distVol - 65) / 250);
+
+  // 限速標誌放在斑馬線上游/附近 (120~380) 提前提醒減速效果最好
+  const distLim = Math.abs(p.limX - 250);
+  const limEff = distLim <= 110 ? 1.0 : Math.max(0.4, 1 - (distLim - 110) / 300);
+
+  return { volEff, limEff, distVol, distLim };
+}
+
+function calc(s, it, lv = level, p = pos) {
+  const cfg = LEVELS[lv];
+  const h = t => it.includes(t) || t === "cross" || t === "sig";
+  const cv = s.c, bv = s.s;
+  const V = cv + s.m * 0.8 + bv * 2;
+  const pe = getPosEfficiency(p);
+
+  let k = cfg.rain ? 1.25 : 1.0; // 第二關暴雨視線不良，基礎風險提高 25%
+  if (h("cross")) k *= 0.6;
+  if (h("sig") && h("cross")) k *= 0.7;
+  if (h("lim")) k *= (1 - 0.25 * pe.limEff); // 限速效果受擺放位置影響
+  if (h("walk")) k *= 0.85;
+  if (h("walkS")) k *= 0.85;
+  if (h("bike") && s.b) k *= 0.85;
+  if (h("nop")) k *= 0.9;
+  if (h("vol")) k *= (1 - 0.22 * pe.volEff); // 志工效果受擺放位置影響
+
+  if (h("light")) k *= cfg.rain ? 0.82 : 0.92;
+  if (h("mirror")) k *= 0.94;
+  if (h("bump")) k *= 0.8;
+  if (h("refuge")) k *= 0.84;
+  if (h("barrier")) k *= 0.9;
+  if (h("tactile")) k *= 0.97;
+  if (h("canopy") && cfg.rain) k *= 0.92;
+  if (h("drain") && cfg.rain) k *= 0.85;
+  if (h("pickup")) k *= 0.91;
+
+  let q = Math.max(0, cv - 12) * 3;
+  const t = Math.round(s.w + s.b + s.s * 20 + s.m + s.c * s.o);
+  const a = t > 0 ? ((s.w + s.b) / t) * 100 : 0;
+
+  return {
+    saf: cl(100 - Math.min(100, V * 2.4) * k),
+    eff: cl(100 - q - (h("nop") ? 8 : 0) - (h("sig") ? 5 : 0) - (h("lim") ? 3 : 0) + (bv ? 5 : 0) - (h("bump") ? 6 : 0) - (h("refuge") ? 3 : 0) + (h("pickup") ? 10 : 0)),
+    walk: cl(a * 0.5 + (h("cross") ? 12 : 0) + (h("walk") ? 14 : 0) + (h("walkS") ? 10 : 0) + (h("bike") ? 8 : 0) + (h("sig") && h("cross") ? 5 : 0) + (h("vol") ? Math.round(4 * pe.volEff) : 0) + (h("nop") ? 4 : 0) + (h("refuge") ? 7 : 0) + (h("barrier") ? 6 : 0) + (h("tactile") ? 8 : 0) + (h("canopy") ? 4 : 0) + (h("drain") ? (cfg.rain ? 7 : 2) : 0)),
+    em: 2 * s.d * (F.m * s.m + F.c * cv + F.s * s.s * 20),
+    t,
+    a,
+    cv,
+    pe
+  };
+}
+
+function setLevel(lv) {
+  level = lv;
+  S = { ...LEVELS[lv].initS };
+  on.clear();
+  pos = { volX: 302, limX: 289 };
+  LAST = `切換至「${LEVELS[lv].name}」`;
+  $("btnL1").classList.toggle("active", lv === 1);
+  $("btnL2").classList.toggle("active", lv === 2);
+  renderSliders();
+  up();
+}
+
+function renderSliders() {
+  const b = LEVELS[level].bounds;
+  $("sd").innerHTML = SL_META.map(([k, name, unit]) => {
+    const [mn, mx] = b[k];
+    return `<label>
+      <span>${name}</span>
+      <input type="range" min="${mn}" max="${mx}" step="1" value="${S[k]}" data-k="${k}">
+      <span id="v${k}" style="text-align:right;font-weight:700"></span>
+    </label>`;
+  }).join("");
+}
+
+function renderTools() {
+  const cfg = LEVELS[level];
+  $("tools").innerHTML = TOOLS.map(([id, label, cost, effect]) => {
+    const isBlocked = cfg.blocked.includes(id);
+    const isOn = on.has(id);
+    const disabled = isBlocked || (!isOn && on.size >= cfg.maxTools);
+    const text = isBlocked ? `🚧 ${label}（施工停用）` : label;
+    return `<button type="button" data-t="${id}" aria-pressed="${isOn}" class="${isOn ? "on" : ""}" ${disabled ? "disabled" : ""}><span>${isOn ? "✓ " : "+ "}${text}</span><span class="tool-cost">${money(cost)}</span><small>${effect}</small></button>`;
+  }).join("");
+  $("toolMessage").textContent = on.size >= cfg.maxTools ? "已達 8 項上限；請先取消一項，再選擇其他設施。" : `還可選擇 ${cfg.maxTools - on.size} 項設施。${level === 2 ? "校門側步道因施工停用；可暫時試配超支方案，但須調整至預算內才能全數過關。" : "第一關可自由探索設施組合，不限制經費。"}`;
+}
+
+document.addEventListener("input", e => {
+  if (e.target.dataset.k) {
+    const k = e.target.dataset.k;
+    S[k] = +e.target.value;
+    const meta = SL_META.find(x => x[0] === k);
+    LAST = `${meta[1]}調整為 ${S[k]} ${meta[2]}`;
+    up();
+  }
+});
+
+$("tools").onclick = e => {
+  const btn = e.target.closest("button");
+  if (!btn || btn.disabled) return;
+  const t = btn.dataset.t;
+  const cfg = LEVELS[level];
+  if (on.has(t)) {
+    on.delete(t);
+    LAST = `取消「${TOOLS.find(x => x[0] === t)[1]}」`;
+  } else if (on.size < cfg.maxTools) {
+    on.add(t);
+    LAST = `加入「${TOOLS.find(x => x[0] === t)[1]}」`;
+  }
+  up();
+};
+
+// SVG 拖曳互動機制 (支援滑鼠與觸控)
+const svgEl = $("sc");
+svgEl.addEventListener("pointerdown", e => {
+  const target = e.target.closest("[data-drag]");
+  if (!target) return;
+  dragging = target.dataset.drag;
+  svgEl.setPointerCapture(e.pointerId);
+});
+
+svgEl.addEventListener("pointermove", e => {
+  if (!dragging) return;
+  const rect = svgEl.getBoundingClientRect();
+  const svgX = ((e.clientX - rect.left) / rect.width) * 800;
+  const clampedX = Math.max(40, Math.min(760, Math.round(svgX)));
+  if (dragging === "vol") pos.volX = clampedX;
+  if (dragging === "lim") pos.limX = clampedX;
+  simFrame(0);
+  dashAndMissionsOnly();
+});
+
+svgEl.addEventListener("pointerup", e => {
+  if (!dragging) return;
+  const name = dragging === "vol" ? "導護志工" : "限速 30 標誌";
+  const xVal = dragging === "vol" ? pos.volX : pos.limX;
+  LAST = `移動了「${name}」的位置（距離斑馬線中心 ${Math.abs(xVal - 250)} 單位）`;
+  dragging = null;
+  up();
+});
+
+// 繪圖輔助函式
+function kid(x, y, f) {
+  return `<g transform="translate(${x} ${y}) scale(${f ? -1.4 : 1.4} 1.4)"><g class="bob"><rect x="-6" y="-13" width="3" height="7" rx="1" fill="#e53935"/><rect x="-3" y="-12.5" width="6" height="7.5" rx="1.5" fill="#fff" stroke="#9aa5ab" stroke-width=".5"/><rect x="-3" y="-5" width="6" height="3.5" fill="#1f3a5f"/><rect x="-2.4" y="-1.5" width="1.8" height="1.5" fill="#f1c9a5"/><rect x=".6" y="-1.5" width="1.8" height="1.5" fill="#f1c9a5"/><circle cy="-16.5" r="3.2" fill="#f1c9a5"/><path d="M-3.6 -17.2a3.6 3.6 0 0 1 7.2 0z" fill="#f6c23e"/><rect x="-.5" y="-17.6" width="4.5" height="1" fill="#f6c23e"/></g></g>`;
+}
+
+function opp() {
+  let o = `<rect y="355" width="800" height="135" fill="#cde6f2"/>`;
+  [[0, 100, "#e9b98f", "商店", "#c9382c", "🛒"], [100, 100, "#d6dfe6", "模型店", "#2a5d84", "🤖"], [200, 100, "#f0d98a", "停車場", "#2a5d84", "P"], [300, 110, "#f4d35e", "兒童美語", "#2f7d5b", "🦉"], [410, 110, "#6f7b78", "動物醫院", "#2a77b8", "🐾"], [520, 130, "#eef0f2", "大樓", "#7b8794", "🏢"], [650, 150, "#d9c7a0", "補習班", "#2a4f9a", "🎓"]].forEach(([x, w, c, n, sc, em]) => {
+    const h = 76;
+    if (n === "停車場") {
+      o += `<rect x="${x + 1}" y="356" width="${w - 2}" height="${h}" fill="#6b6f75" stroke="#4a4538"/><rect x="${x + 4}" y="367" width="56" height="12" rx="3" fill="#2a5d84"/><text x="${x + 8}" y="377" font-size="10" fill="#fff" font-weight="900">P 停車場</text>`;
+      for (let r = 0; r < 2; r++) for (let k = 0; k < 4; k++) o += `<text x="${x + 6 + k * 24}" y="${400 + r * 26}" font-size="18">${["🚗", "🚙", "🚕", "🚐", "🚗", "🚙", "🚓", "🚗"][r * 4 + k]}</text>`;
+      return;
+    }
+    o += `<rect x="${x + 1}" y="356" width="${w - 2}" height="${h}" fill="${c}" stroke="#4a4538"/><rect x="${x + 4}" y="358" width="${w - 8}" height="24" fill="${sc}"/><text x="${x + 8}" y="375" font-size="11" fill="#fff" font-weight="900">${em}${n}</text>`;
+  });
+  return o;
+}
+
+function scene() {
+  const h = t => on.has(t);
+  const cfg = LEVELS[level];
+  const skyTop = cfg.rain ? "#4a5d6e" : "#7fbfe6";
+  const skyBot = cfg.rain ? "#8ea1b2" : "#e6f1f3";
+
+  let o = `<defs><linearGradient id="sk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${skyTop}"/><stop offset="1" stop-color="${skyBot}"/></linearGradient></defs><rect width="800" height="320" fill="url(#sk)"/>`;
+  o += `<g fill="${cfg.rain ? "#6b7c8c" : "#fff"}" opacity=".9"><ellipse cx="620" cy="34" rx="70" ry="14"/><ellipse cx="690" cy="44" rx="50" ry="11"/><ellipse cx="200" cy="26" rx="60" ry="12"/></g>`;
+  // 咖啡廳
+  o += `<rect x="590" y="48" width="210" height="146" fill="#f6dfe3" stroke="#b4647a"/><rect x="590" y="48" width="210" height="10" fill="#f06292"/><rect x="603" y="164" width="187" height="28" fill="#fde8ec"/><rect x="603" y="164" width="187" height="13" fill="#f06292"/><text x="608" y="174" font-size="10" fill="#fff" font-weight="900">🍰 蛋糕咖啡廳</text>`;
+  // 校舍與校門
+  o += `<rect x="0" y="92" width="560" height="100" fill="#b9604a" stroke="#6b3b2e"/><rect x="0" y="84" width="560" height="10" fill="#8a4637"/>`;
+  for (let i = 0; i < 10; i++) o += `<rect x="${14 + i * 54}" y="110" width="24" height="26" fill="#cfe6ea" stroke="#6b3b2e"/><rect x="${14 + i * 54}" y="148" width="24" height="22" fill="#cfe6ea" stroke="#6b3b2e"/>`;
+  o += `<rect y="176" width="800" height="16" fill="#cfc6b4"/><rect x="335" y="156" width="14" height="36" fill="#f3f1ea" stroke="#8b8472"/><rect x="450" y="156" width="14" height="36" fill="#f3f1ea" stroke="#8b8472"/><rect x="330" y="128" width="140" height="24" rx="4" fill="#1f5f8b" stroke="#fff" stroke-width="2"/><text x="366" y="146" font-size="17" fill="#fff" font-weight="900">清華附小</text>`;
+  // 道路底色
+  o += `<rect y="192" width="800" height="128" fill="#585d63"/><rect x="335" y="192" width="170" height="8" fill="#a79f8d"/>`;
+  // 校門側人行道 / 綠帶 / 第二關施工區
+  o += `<rect x="0" y="192" width="590" height="14" fill="${h("walkS") ? "#e4dccb" : "#8aa66e"}"/><rect x="590" y="192" width="210" height="14" fill="#e4dccb"/><rect x="0" y="206" width="800" height="3" fill="#b5ac98"/>`;
+  if (!h("walkS")) {
+    o += [90, 150, 210, 270, 520, 565].map(x => `<rect x="${x - 4}" y="140" width="8" height="64" fill="#4c3a2a"/><circle cx="${x}" cy="128" r="28" fill="#2e6b3a" opacity=".95"/><circle cx="${x + 16}" cy="138" r="20" fill="#357a43" opacity=".95"/>`).join("");
+  }
+  if (cfg.blocked.includes("walkS")) {
+    o += `<rect x="470" y="186" width="115" height="20" fill="#ff9800" stroke="#222" stroke-dasharray="6 4"/><text x="476" y="200" font-size="10" fill="#000" font-weight="900">🚧 管線施工禁改建</text>`;
+  } else {
+    o += `<text x="8" y="203" font-size="9" fill="#1d2f1d" font-weight="700">${h("walkS") ? "校門側：已拆樹改建步道" : "校門側：人行道區種樹"}</text>`;
+  }
+
+  // 對面人行道與商家
+  o += `<g transform="translate(0 -30)"><rect y="320" width="800" height="50" fill="#585d63"/>${opp()}${h("bike") ? `<rect y="322" width="800" height="12" fill="#3aa66c" opacity=".9"/><text x="20" y="332" font-size="9" fill="#fff" font-weight="700">綠色自行車專用道</text>` : ""}`;
+  o += h("walk")
+    ? `<rect y="338" width="800" height="3" fill="#b5ac98"/><rect y="341" width="800" height="14" fill="#e4dccb"/><text x="8" y="352" font-size="10" fill="#3b3a33" font-weight="700">對面：新增人行步道</text></g>`
+    : `<path d="M0 338H800" stroke="#fff" stroke-width="3"/><text x="470" y="350" font-size="18">🛵🛵🛵</text><g class="wk" style="--d:120px;animation-duration:9s">${kid(300, 350)}</g><text x="8" y="349" font-size="10" fill="#fff">對面沒有人行道</text></g>`;
+
+  // 雙黃線與快慢車道線
+  o += `<path d="M0 256H800M0 261H800" stroke="#e0b000" stroke-width="3"/><path d="M0 232H800" stroke="#fff" stroke-dasharray="30 20" stroke-width="3"/>`;
+  if (h("bike")) o += `<rect y="209" width="800" height="12" fill="#3aa66c" opacity=".9"/><text x="20" y="219" font-size="9" fill="#fff" font-weight="700">綠色自行車專用道</text>`;
+
+  // 路邊停車 vs 禁止停車
+  if (!h("nop")) {
+    o += `<text x="500" y="230" font-size="32">🚙</text><text x="650" y="230" font-size="32">🚗</text>`;
+  } else {
+    o += `<path d="M480 208H720" stroke="#e53935" stroke-width="4"/><text x="540" y="222" font-size="11" fill="#ffcdd2" font-weight="900">🚫 紅線禁止臨停</text>`;
+  }
+
+  // 斑馬線 (X = 210 ~ 290)
+  for (let i = 0; i < 9; i++) o += `<rect x="210" y="${211 + i * 11}" width="80" height="6" fill="#fff" opacity=".92"/>`;
+  o += `<rect x="190" y="209" width="3" height="47" fill="#fff" opacity=".9"/><rect x="307" y="261" width="3" height="47" fill="#fff" opacity=".9"/>`;
+
+  // 新設施圖示與道路標記（固定位置）
+  const mark = (id, x, y, icon, label) => h(id) ? `<g data-facility="${id}"><rect x="${x}" y="${y}" width="100" height="22" rx="4" fill="#fff" stroke="#2a5d84"/><text x="${x+4}" y="${y+15}" font-size="10" fill="#193b52">${icon} ${label}</text></g>` : "";
+  o += mark("light", 40, 42, "💡", "行穿線照明") + mark("mirror", 150, 42, "◉", "路口反射鏡") + mark("canopy", 590, 80, "☂", "候車遮雨棚");
+  o += mark("barrier", 40, 70, "▥", "行人防護欄") + mark("tactile", 150, 70, "♿", "無障礙設施") + mark("drain", 590, 108, "≋", "排水改善");
+  if (h("light")) o += `<path d="M175 205V148H198" fill="none" stroke="#394855" stroke-width="4"/><ellipse cx="198" cy="149" rx="9" ry="4" fill="#ffeb70"/>`;
+  if (h("mirror")) o += `<path d="M325 207V185" stroke="#ef7929" stroke-width="3"/><circle cx="325" cy="179" r="8" fill="#cce9f4" stroke="#ef7929" stroke-width="3"/>`;
+  if (h("bump")) o += `<g data-facility="bump"><path d="M115 238H150V288H115Z" fill="#e8bf43" opacity=".75"/><text x="112" y="284" font-size="9" fill="#151515" transform="rotate(-90 112 284)">減速平台</text></g>`;
+  if (h("refuge")) o += `<g data-facility="refuge"><rect x="212" y="251" width="76" height="15" rx="7" fill="#d5c9ac" stroke="#fcdf69" stroke-width="2"/><text x="220" y="262" font-size="9" fill="#333">行人庇護島</text></g>`;
+  if (h("barrier")) o += `<path d="M20 200H180M320 200H440M30 192V206M65 192V206M100 192V206M135 192V206M170 192V206M330 192V206M365 192V206M400 192V206M435 192V206" stroke="#b8dbed" stroke-width="3"/>`;
+  if (h("tactile")) o += `<path d="M206 310H300" stroke="#f2c64b" stroke-width="5" stroke-dasharray="3 2"/>`;
+  if (h("drain")) o += `<path d="M350 304H450M600 304H740" stroke="#293b46" stroke-width="6" stroke-dasharray="4 3"/>`;
+  if (h("pickup")) o += `<g data-facility="pickup"><rect x="610" y="266" width="160" height="32" fill="none" stroke="#89d5ff" stroke-dasharray="7 3"/><text x="635" y="280" font-size="10" fill="#fff">分流接送停靠區</text></g>`;
+
+  // 步行上學小人動畫
+  const wn = Math.min(18, S.w - Math.floor(S.w / 3));
+  for (let i = 0; i < wn; i++) {
+    const L = i % 2 === 0, en = (i >> 1) % 2 === 0;
+    const x0 = L ? 90 + (i * 37) % 200 : 480 + (i * 29) % 90;
+    const sx = en ? x0 : 400 + (i * 5) % 20 - 10;
+    const d = en ? 400 - x0 : x0 - 400;
+    const y = h("walkS") ? 204 : 224;
+    o += `<g class="${en ? "en" : "lv"}" style="--d:${d}px;animation-duration:${7 + (i % 4) * 1.5}s;animation-delay:-${i * 1.3}s">${kid(sx, y, d < 0)}</g>`;
+  }
+
+  o += `<g id="dyn"></g>`;
+  if (cfg.rain) {
+    o += `<g stroke="#b3e5fc" stroke-width="1.2" opacity=".45">`;
+    for (let rx = 20; rx < 800; rx += 35) {
+      for (let ry = 10; ry < 310; ry += 45) {
+        o += `<line x1="${rx}" y1="${ry}" x2="${rx - 8}" y2="${ry + 18}"/>`;
+      }
+    }
+    o += `</g><rect x="8" y="8" width="230" height="24" rx="4" fill="rgba(0,0,0,.65)"/><text x="16" y="24" font-size="12" fill="#81d4fa" font-weight="700">🌧️ 暴雨視線不良（碰撞風險 +25%）</text>`;
+  }
+  return o;
+}
+
+// 動態車流與可拖曳物件
+const R = (a, b) => a + Math.random() * (b - a);
+const SIM = { sig: "", V: [], P: [] };
+const t0 = performance.now();
+let lastT = t0;
+
+function simInit(sg) {
+  SIM.sig = sg;
+  const [nc, ns, bs, np, nb, bl] = sg.split(",").map(Number);
+  const V = [], add = (e, L, v, d, y, ln) => V.push({ e, L, v, dir: d, y, x: 0, ln: ln || (d > 0 ? "a" : "b") });
+  for (let i = 0; i < Math.min(12, nc); i++) add("🚗", 32, R(60, 72), i % 2 ? 1 : -1, i % 2 ? 254 : 290);
+  for (let i = 0; i < Math.min(14, ns); i++) add("🛵", 24, R(75, 88), i % 2 ? 1 : -1, i % 2 ? 250 : 288);
+  for (let i = 0; i < bs; i++) add("🚌", 38, 55, -1, 290);
+  for (let i = 0; i < Math.min(12, nb); i++) {
+    const f = i % 2;
+    add("bike", 28, R(35, 45), f ? 1 : -1, f ? (bl ? 220 : 226) : (bl ? 303 : 304), bl ? (f ? "c" : "d") : (f ? "a" : "b"));
+  }
+  ["a", "b", "c", "d"].forEach(l => {
+    let acc = 0;
+    V.filter(v => v.ln === l).sort(() => Math.random() - 0.5).forEach(v => {
+      v.x = v.dir > 0 ? 680 - acc : 140 + acc;
+      acc += v.L + R(14, 40);
+    });
+  });
+  SIM.V = V;
+  SIM.P = Array.from({ length: np }, (_, i) => ({ side: i % 2, w: i, x: i % 2 ? 300 : 180, y: i % 2 ? 322 : 206, st: "w", go: 1e9, cn: -1, cx: 222 + (i % 6) * 11 }));
+}
+
+function simStep(dt, cyc, sp) {
+  for (const v of SIM.V) {
+    const d = v.dir;
+    let nx = v.x + d * v.v * sp * dt, lead = null, ld = 1e9;
+    for (const o of SIM.V) {
+      if (o === v || o.ln !== v.ln) continue;
+      const dist = d > 0 ? o.x - v.x : v.x - o.x;
+      if (dist > 0 && dist < ld) { ld = dist; lead = o; }
+    }
+    if (lead) {
+      const lim = d > 0 ? lead.x - lead.L - 8 : lead.x + lead.L + 8;
+      nx = d > 0 ? Math.min(nx, lim) : Math.max(nx, lim);
+    }
+    const s = d > 0 ? 193 : 307, dd = d > 0 ? s - v.x : v.x - s;
+    if (dd >= 0 && cyc >= 14 && (d > 0 ? nx > s : nx < s)) nx = s;
+    if (d > 0 ? nx < v.x : nx > v.x) nx = v.x;
+    v.x = nx;
+    if (d > 0 && v.x - v.L > 860) v.x = -30;
+    if (d < 0 && v.x + v.L < -20) v.x = 860;
+  }
+}
+
+function pedStep(dt, cyc, t) {
+  const cn = Math.floor(t / 25);
+  for (const p of SIM.P) {
+    if (p.st === "w") {
+      if (p.cn !== cn && cyc >= 15) { p.cn = cn; p.go = Math.random() < 0.6 ? 16.5 + Math.random() * 4 : 1e9; }
+      if (cyc >= p.go && cyc < 21 && !SIM.V.some(v => (v.dir > 0 ? v.x : v.x + v.L) > 205 && (v.dir > 0 ? v.x - v.L : v.x) < 295)) p.st = "c";
+      const wx = p.side ? 296 + (p.w * 5) % 24 : 170 + (p.w * 5) % 24;
+      p.x += (wx - p.x) * Math.min(1, dt * 3);
+    } else {
+      const ty = p.side ? 206 : 322, dr = Math.sign(ty - p.y);
+      p.y += dr * 30 * dt;
+      p.x += (p.cx - p.x) * Math.min(1, dt * 4);
+      if ((ty - p.y) * dr <= 0) { p.y = ty; p.side = 1 - p.side; p.st = "w"; p.go = 1e9; p.cn = cn; }
+    }
+  }
+}
+
+function guardFig(x, y, a) {
+  return `<g class="drag-item" data-drag="vol" transform="translate(${x} ${y})">
+    <circle cx="0" cy="-16" r="24" fill="rgba(255,235,59,.25)" stroke="#fbc02d" stroke-dasharray="3 2"/>
+    <text x="0" y="-44" text-anchor="middle" font-size="10" fill="#fff" stroke="#000" stroke-width="2.5" paint-order="stroke" font-weight="900">↔ 拖曳志工</text>
+    <g transform="scale(-1.7 1.7)">
+      <rect x="-4" y="-13.5" width="8" height="10" rx="1.5" fill="#c6f432" stroke="#7a9a10" stroke-width=".5"/>
+      <rect x="-3.2" y="-4" width="2.6" height="4" fill="#2b3a55"/><rect x=".6" y="-4" width="2.6" height="4" fill="#2b3a55"/>
+      <circle cy="-17" r="3.4" fill="#f1c9a5"/><path d="M-3.6 -17.6a3.6 3.6 0 0 1 7.2 0z" fill="#fff"/><rect x="-3.8" y="-18.2" width="7.6" height="1.2" fill="#2a5d84"/>
+      <g transform="rotate(${a.toFixed(1)} 4.4 -12)"><rect x="4.4" y="-12.9" width="7" height="1.8" rx=".8" fill="#c6f432"/><rect x="11" y="-26" width=".9" height="14" fill="#8a6d3b"/><path d="M11.9 -26l8 3-8 3z" fill="#e53935"/></g>
+    </g>
+  </g>`;
+}
+
+function limSignFig(x) {
+  return `<g class="drag-item" data-drag="lim" transform="translate(${x} 178)">
+    <circle cx="0" cy="0" r="22" fill="rgba(255,235,59,.25)" stroke="#fbc02d" stroke-dasharray="3 2"/>
+    <text x="0" y="-26" text-anchor="middle" font-size="10" fill="#fff" stroke="#000" stroke-width="2.5" paint-order="stroke" font-weight="900">↔ 拖曳限速</text>
+    <rect x="-1.5" y="4" width="3" height="26" fill="#333"/>
+    <circle cx="0" cy="0" r="14" fill="#fff" stroke="#d32" stroke-width="4"/>
+    <text x="0" y="4.5" text-anchor="middle" font-size="12" font-weight="900" fill="#111">30</text>
+  </g>`;
+}
+
+const BIKE = `<circle cx="-7" cy="-5" r="4.6" fill="none" stroke="#222" stroke-width="1.2"/><circle cx="7" cy="-5" r="4.6" fill="none" stroke="#222" stroke-width="1.2"/><path d="M-7 -5L-1 -5L3 -11L7 -5" stroke="#c9382c" fill="none" stroke-width="1.2"/><circle cx="1.5" cy="-22.5" r="2.6" fill="#f1c9a5"/>`;
+
+function simDraw(cyc) {
+  const g = $("dyn");
+  if (!g) return;
+  let o = "";
+  for (const v of SIM.V) {
+    o += v.e === "bike"
+      ? `<g transform="translate(${(v.dir > 0 ? v.x - 15 : v.x + 15).toFixed(1)} ${v.y}) scale(${v.dir > 0 ? 1.3 : -1.3} 1.3)">${BIKE}</g>`
+      : v.dir > 0
+        ? `<text transform="translate(${v.x.toFixed(1)} ${v.y}) scale(-1 1)" font-size="${v.L}">${v.e}</text>`
+        : `<text x="${v.x.toFixed(1)}" y="${v.y}" font-size="${v.L}">${v.e}</text>`;
+  }
+  const gr = cyc < 14, ye = cyc >= 14 && cyc < 15, rd = cyc >= 15, pg = cyc >= 15.2 && cyc < 24.5;
+  const hd = x => `<rect x="${x - 1}" y="190" width="2" height="14" fill="#444"/><rect x="${x - 5}" y="162" width="10" height="28" rx="3" fill="#222"/><circle cx="${x}" cy="168" r="3" fill="${rd ? "#ff3b30" : "#4a2a2a"}"/><circle cx="${x}" cy="176" r="3" fill="${ye ? "#ffcc00" : "#4a4a2a"}"/><circle cx="${x}" cy="184" r="3" fill="${gr ? "#34c759" : "#2a4a2a"}"/>`;
+  const ph = (x, y) => `<rect x="${x - 1}" y="${y + 10}" width="2" height="12" fill="#444"/><rect x="${x - 5}" y="${y}" width="10" height="12" rx="2" fill="#222"/><circle cx="${x}" cy="${y + 6}" r="3.5" fill="${pg ? "#34c759" : "#ff3b30"}"/>`;
+  o += hd(196) + hd(312) + ph(300, 170) + ph(198, 299);
+  for (const p of SIM.P) o += kid(p.x.toFixed(1), p.y.toFixed(1), false);
+  if (on.has("lim")) o += limSignFig(pos.limX);
+  if (on.has("vol")) o += guardFig(pos.volX, 207, rd ? -25 + 55 * (0.5 + 0.5 * Math.sin(performance.now() / 120)) : 100);
+  g.innerHTML = o;
+}
+
+function simFrame(dt) {
+  const sg = [S.c, S.m, S.s, Math.floor(S.w / 3), S.b, on.has("bike") ? 1 : 0].join();
+  if (sg !== SIM.sig) simInit(sg);
+  const t = (performance.now() - t0) / 1000, cyc = t % 25;
+  if (dt > 0) {
+    simStep(dt, cyc, (on.has("lim") ? 0.7 : 1) * (on.has("bump") ? 0.8 : 1));
+    pedStep(dt, cyc, t);
+  }
+  simDraw(cyc);
+}
+
+function simLoop(now) {
+  const dt = Math.min(0.05, (now - lastT) / 1000);
+  lastT = now;
+  simFrame(dt);
+  requestAnimationFrame(simLoop);
+}
+requestAnimationFrame(simLoop);
+
+// 儀表板與任務系統
+const SDGS = {
+  3: ["SDG 3", "良好健康與福祉", "#4c9f38", "🩺"],
+  11: ["SDG 11", "永續城鄉", "#fd9d24", "🏙️"],
+  13: ["SDG 13", "氣候行動", "#3f7e44", "🌍"]
+};
+const stars = n => "★".repeat(n) + "☆".repeat(5 - n);
+const dl = (v, b, inv, fx) => {
+  const x = v - b, g = inv ? x < 0 : x > 0;
+  return x ? `<span class="${g ? "up" : "dn"}">${x > 0 ? "+" : ""}${x.toFixed(fx)}</span>` : "–";
+};
+
+function card(id, label, val, delta, st, fb, extra = "") {
+  const g = SDGS[id];
+  return `<div class="sd"><div class="sb" style="background:${g[2]}"><b>${id}</b><span>${g[3]}</span></div><div class="sx"><div class="sn">${g[0]} ${g[1]}</div><div class="m"><span>${label}</span><span><b>${val}</b> ${delta}</span></div>${extra}<div class="stars">${stars(st)}</div><div class="fb">${fb}</div></div></div>`;
+}
+
+function getMissions(s, ids, lv, p) {
+  const cfg = LEVELS[lv], c = calc(s, ids, lv, p), base = getBase(lv), budget = getBudget(lv, ids);
+  const h = id => ids.includes(id);
+  const minPop = cfg.targetPop - cfg.tol, maxPop = cfg.targetPop + cfg.tol;
+  const popOk = c.t >= minPop && c.t <= maxPop;
+  const boundsOk = Object.entries(cfg.bounds).every(([key, [lo, hi]]) => Number.isInteger(s[key]) && s[key] >= lo && s[key] <= hi);
+  const valid = popOk && boundsOk;
+  const green = (s.w + s.b + s.s * 20) / c.t * 100;
+  const reductions = lv === 1 ? 30 : 35;
+  const safe = lv === 1 ? 70 : 72;
+  const flow = lv === 1 ? 65 : 60;
+  const walkTarget = lv === 1 ? 45 : 50;
+  const greenTarget = lv === 1 ? 60 : 65;
+  const rows = [
+    ["簡單", "d-easy", `完成學生分配：總人數 ${minPop}～${maxPop} 人`, popOk],
+    ["簡單", "d-easy", "各上學方式皆符合滑桿標示的上下限", boundsOk],
+    ["簡單", "d-easy", "啟用至少 1 項安全設施", ids.length >= 1],
+    ["簡單", "d-easy", "使用最多 8 項設施，並避開施工停用項目", ids.length <= cfg.maxTools && ids.every(id => !cfg.blocked.includes(id))],
+    ["簡單", "d-easy", `家長汽車比現況減少至少 25%（最多 ${Math.floor(cfg.initS.c * 0.75)} 台）`, valid && s.c <= cfg.initS.c * 0.75],
+    ["簡單", "d-easy", "安排至少 20 位學生步行上學", valid && s.w >= 20],
+    ["簡單", "d-easy", "安排至少 5 位學生騎自行車上學", valid && s.b >= 5],
+    ["簡單", "d-easy", "安排至少 1 台接駁公車（每台 20 人）", valid && s.s >= 1],
+    ["中等", "d-mid", `綠色運輸比例（步行＋單車＋公車）達 ${greenTarget}%`, valid && green >= greenTarget],
+    ["中等", "d-mid", `安全分數達 ${safe} 分`, valid && c.saf >= safe],
+    ["困難", "d-hard", `進階安全目標：達 ${safe + 10} 分`, valid && c.saf >= safe + 10],
+    ["中等", "d-mid", `通行順暢度達 ${flow} 分`, valid && c.eff >= flow],
+    ["中等", "d-mid", `好走程度達 ${walkTarget} 分`, valid && c.walk >= walkTarget],
+    ["中等", "d-mid", "每天碳排放比現況減少至少 15%", valid && c.em <= base.em * 0.85],
+    ["困難", "d-hard", `進階減碳目標：比現況減少至少 ${reductions}%`, valid && c.em <= base.em * (1 - reductions / 100)],
+    ["中等", "d-mid", "保留校門前 6 棵樹（不啟用拆樹步道）", !h("walkS")],
+    ["中等", "d-mid", "加強穿越保護：選用導護志工或行人庇護島", h("vol") || h("refuge")],
+    ["困難", "d-hard", "空間配置：選用志工或限速牌，並將所有已選的可拖曳設施放在有效位置（效能至少 85%）", (h("vol") || h("lim")) && (!h("vol") || c.pe.volEff >= 0.85) && (!h("lim") || c.pe.limEff >= 0.85)],
+    ["中等", "d-mid", lv === 1 ? "改善視線：選用照明燈或路口反射鏡" : "因應暴雨：選用路面排水改善或候車遮雨棚", lv === 1 ? h("light") || h("mirror") : h("drain") || h("canopy")]
+  ];
+  rows.push(["困難", "d-hard", lv === 1 ? "最終驗收：同時達成前 19 項（本關不限經費）" : "最終驗收：同時達成前 19 項，且總費用不超過 NT$ 120,000", rows.every(row => row[3]) && budget.ok]);
+  return rows;
+}
+
+function dashAndMissionsOnly() {
+  const cfg = LEVELS[level];
+  const BASE = getBase(level);
+  const c = calc(S, [...on], level, pos);
+
+  // 檢查總人數是否符合規範
+  const minPop = cfg.targetPop - cfg.tol;
+  const maxPop = cfg.targetPop + cfg.tol;
+  const popOk = c.t >= minPop && c.t <= maxPop;
+  const pb = $("popBadge");
+  pb.textContent = `目前服務：${c.t} 人（目標 ${minPop}～${maxPop} 人）`;
+  pb.className = `badge ${popOk ? "ok" : "err"}`;
+
+  // 更新設施數量徽章
+  const fb = $("facBadge");
+  fb.textContent = `已用設施：${on.size} / ${cfg.maxTools} 項`;
+  fb.className = `badge ${on.size <= cfg.maxTools ? "ok" : "err"}`;
+
+  const budget = getBudget();
+  $("budgetTotal").textContent = budget.total === null ? "不限" : money(budget.total);
+  $("budgetUsed").textContent = money(budget.used);
+  $("budgetLeft").textContent = budget.remaining === null ? "不限" : money(budget.remaining);
+  $("budgetLeft").className = budget.ok ? "" : "dn";
+  $("budgetMessage").className = `note ${budget.ok ? "info" : "over-budget"}`;
+  $("budgetMessage").textContent = budget.total === null
+    ? "第一關：不限制經費。可比較不同設施組合的成本與效果。"
+    : budget.ok ? `第二關：目前在預算內，尚餘 ${money(budget.remaining)}。取消設施即可退回費用。`
+      : `⚠ 已超出預算 ${money(-budget.remaining)}！請取消部分設施或改選較低費用的方案；調整至預算內才能完成最終驗收。`;
+  const missions = getMissions(S, [...on], level, pos);
+
+  const doneCount = missions.filter(m => m[3]).length;
+  $("msBadge").textContent = `達成 ${doneCount} / ${missions.length}`;
+  $("msBadge").className = `badge ${doneCount === missions.length ? "ok" : ""}`;
+
+  $("ms").innerHTML = missions.map(([lvTxt, cls, desc, ok], index) =>
+    `<li class="${ok ? "ok" : ""}"><span class="diff ${cls}">${lvTxt}</span><span>${ok ? "✔" : "○"} ${index + 1}. ${desc}</span></li>`
+  ).join("") + (doneCount === missions.length ? `<li class="ok">🎉 恭喜全數過關！快準備向全班分享你的交通規劃理由！</li>` : "");
+
+  // 更新儀表板
+  const rd = BASE.em ? ((BASE.em - c.em) / BASE.em) * 100 : 0;
+  const sc = v => Math.max(0, Math.min(5, Math.round(v / 20)));
+  const s3 = sc(c.saf), s11 = sc(c.walk);
+  const s13 = rd >= 35 ? 5 : rd >= 25 ? 4 : rd >= 15 ? 3 : rd >= 5 ? 2 : rd > 0 ? 1 : 0;
+
+  $("dash").innerHTML =
+    card(3, "安全分數", c.saf, dl(c.saf, BASE.saf, 0, 0), s3, s3 >= 4 ? "行人和車輛衝突的機會很低！" : "風險偏高，試著調整設施或拖曳志工／限速牌的位置。") +
+    card(11, "好走程度", c.walk, dl(c.walk, BASE.walk, 0, 0), s11, s11 >= 4 ? "走路和騎單車的空間很安心！" : "行人與單車空間不足，容易與車爭道。",
+      `<div class="m"><span>通行順暢度</span><span><b>${c.eff}</b> ${dl(c.eff, BASE.eff, 0, 0)}</span></div>
+       <div class="m"><span>校門前綠帶大樹</span><span><b>${on.has("walkS") ? 0 : 6} 棵</b> ${on.has("walkS") ? '<span class="dn">-6</span>' : "–"}</span></div>`) +
+    card(13, "每天碳排放 kg CO₂e", c.em.toFixed(1), dl(c.em, BASE.em, 1, 1), s13, s13 >= 4 ? "減碳成效非常顯著！" : "試著增加共乘公車、步行或單車人數。",
+      `<div class="m"><span>綠色運輸比例</span><span><b>${((S.w + S.b + S.s * 20) / c.t * 100).toFixed(1)}%</b></span></div><div class="m"><span>減碳比例</span><span><b>${rd.toFixed(1)}%</b></span></div><div class="m"><span>平均每位學生排放</span><span><b>${c.t > 0 ? (c.em / c.t * 1000).toFixed(0) : 0}</b> g CO₂e</span></div>`);
+}
+
+function fbkSet() {
+  const c = calc(S, [...on], level, pos);
+  const h = t => on.has(t);
+  const say = (w, col, em, txt) => `<div class="sy"><span class="av" style="background:${col}">${em}</span><div class="bu"><b>${w}</b>${txt}</div></div>`;
+
+  let volMsg = "現在沒有導護志工，學生過馬路要自己看車，讓人很擔心。";
+  if (h("vol")) {
+    volMsg = c.pe.volEff >= 0.85
+      ? "我站在斑馬線正旁邊指揮，視線清楚，學生過馬路非常安全！"
+      : "你把我擺得離斑馬線太遠了！我在這裡揮旗子，駕駛根本不會注意到斑馬線上的學生。";
+  }
+
+  let limMsg = "校門口車速如果太快，煞車會來不及。";
+  if (h("lim")) {
+    limMsg = c.pe.limEff >= 0.85
+      ? "限速 30 標誌放在斑馬線附近很醒目，我會提早放慢車速！"
+      : "限速標誌離斑馬線太遠了，開到校門口時容易忘記減速。";
+  }
+
+  $("fbk").innerHTML = (LAST ? `<div class="note">剛剛你調整了：<b>${LAST}</b></div>` : "") + [
+    say("導護志工", "#c5192d", "🧑‍🏫", volMsg),
+    say("交通工程師", "#2a5d84", "📐", `目前總服務人數為 <b>${c.t} 人</b>，設施使用了 <b>${on.size} / ${LEVELS[level].maxTools} 項</b>。${on.size === LEVELS[level].maxTools ? "已達設施上限，請思考這幾項是否為最佳組合！" : ""}`),
+    say("家長代表", "#3f7e44", "👪", h("nop") ? "雖然校門口不能臨停有點不方便，但為了孩子過馬路安全，我願意多走幾步路。" : S.c >= 18 ? "開車接送的家長太多了，校門口擠成一團，或許可以改搭接駁公車！" : "看到越來越多同學自己走路或騎單車上學，真棒！"),
+    say("汽車駕駛", "#e08a00", "🚗", limMsg),
+    say("學生", "#8e44ad", "🎒", c.saf >= 70 ? "現在過馬路有安全感多了，上學心情變得很輕鬆！" : "車子好多、離我們好近，過馬路時心跳好快……")
+  ].join("");
+}
+
+function up() {
+  SL_META.forEach(([k, , unit]) => {
+    const el = $("v" + k);
+    if (el) el.textContent = `${S[k]} ${unit}`;
+  });
+  renderTools();
+  $("sc").innerHTML = scene();
+  simFrame(0);
+  dashAndMissionsOnly();
+  fbkSet();
+}
+
+renderSliders();
+up();
+</script>
+</body>
+</html>
